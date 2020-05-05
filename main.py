@@ -2,9 +2,10 @@ from flask import Flask, logging, request  # import flask
 import requests
 import json
 from timezonefinder import TimezoneFinder
-import pytz
-import datetime
+from time import ctime, time
+
 from db import get_current_crowd
+import os
 
 app = Flask(__name__)  # create an app instance
 
@@ -62,12 +63,10 @@ def find_restaurants(lat, long, radius):
 
     tf = TimezoneFinder()
     time_zone = tf.timezone_at(lng=long, lat=lat)
-    timezone = pytz.timezone(time_zone)
-    dt = datetime.datetime.utcnow()
-    dt = timezone.utcoffset(dt)
-
+    os.environ['TZ'] = time_zone
+    dt = ctime(time())
     print(dt)
-    occupancy_map = get_current_crowd(list(st), GOOGLE_API_KEY, dt)
+    occupancy_map = get_current_crowd(list(st), GOOGLE_API_KEY, dt, time_zone)
 
     ordered_results = perform_ordering_restaurant(result, occupancy_map)
 
@@ -98,9 +97,8 @@ def find_store(lat, long, radius):
 
     tf = TimezoneFinder()
     time_zone = tf.timezone_at(lng=long, lat=lat)
-    timezone = pytz.timezone(time_zone)
-    dt = datetime.datetime.utcnow()
-    dt = timezone.utcoffset(dt)
+    os.environ['TZ'] = time_zone
+    dt = ctime(time())
 
     occupancy_map = get_current_crowd(list(st), GOOGLE_API_KEY, dt)
 
@@ -143,4 +141,4 @@ def places():
 
 
 if __name__ == "__main__":  # on running python app.py
-    app.run(debug=True)  # run the flask app
+    app.run()  # run the flask app

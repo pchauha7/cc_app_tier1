@@ -14,7 +14,7 @@ db = client.CCProject  # Select the database
 tasks_collection = db.PopularTimeCollection  # Select the collection name
 latest_collection = db.LatestPopularTime
 
-days = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+days = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
 
 def get_current_crowd2( place_ids, api_key, cur_time):
     time1 = int(round(time()*1000))
@@ -56,23 +56,26 @@ def get_current_crowd2( place_ids, api_key, cur_time):
     print(time2 - time1)
     return occ_map
 
-def get_current_crowd( place_ids, api_key, cur_time):
+def get_current_crowd( place_ids, api_key, cur_time, cur_zone):
     time1 = int(round(time()*1000))
-    todays_day = datetime.today().strftime('%A')
-    current_time = ctime(time())
+    current_time = cur_time
+    print(cur_time)
+    todays_day = cur_time[:3]
+    print(todays_day)
     occ_map = {}
     current_hour = get_time_InHour(current_time)
+    print("Current hour: "+str(current_hour))
     itr = latest_collection.find({"_id": { "$in": place_ids}})
     cnt = itr.count()
     place_set = set(place_ids)
-    print(len(place_set))
-    print(cnt)
+    #print(len(place_set))
+    #print(cnt)
     for i in range(cnt):
         #stored_time = itr[0]["Time"]
         place_set.remove(itr[i]["_id"])
         if itr[i]["Data"] =="NA":
             continue
-        current_occupancy = itr[i]["Data"]["data"][16]
+        current_occupancy = itr[i]["Data"]["data"][current_hour]
         occ_map[itr[i]["_id"]] = current_occupancy
 
 
@@ -99,10 +102,10 @@ def get_current_crowd( place_ids, api_key, cur_time):
         #time_popular = populartimes.get_id(api_key, place)
         time_popular = pop_dict[place]
         if "populartimes" not in time_popular:
-            insert_list.append({"_id": place, 'Data': "NA"})
+            insert_list.append({"_id": place, 'Zone':cur_zone, 'Data': "NA"})
             continue
-        insert_list.append({"_id": place, 'Data': time_popular['populartimes'][days[todays_day]]})
-        current_occupancy = time_popular['populartimes'][days[todays_day]]["data"][16]
+        insert_list.append({"_id": place, 'Zone':cur_zone, 'Data': time_popular['populartimes'][days[todays_day]]})
+        current_occupancy = time_popular['populartimes'][days[todays_day]]["data"][current_hour]
         occ_map[place] = current_occupancy
 
     if len(insert_list)>0:
