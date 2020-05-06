@@ -95,7 +95,7 @@ def get_current_crowd(place_ids, dest_place_id, api_key, cur_time, cur_zone):
         latest_collection.insert(insert_list)
 
     # creating thread to add popular time of place_ids in the Analytics collection
-    Analytics_thrd = threading.Thread(target=Add_Analytics_data, args=(place_ids,tasks_collection,cur_zone,))
+    Analytics_thrd = threading.Thread(target=Add_Analytics_data, args=(place_ids, api_key, tasks_collection,cur_zone,))
     Analytics_thrd.start()
 
     time2 = int(round(time() * 1000))
@@ -105,14 +105,13 @@ def get_current_crowd(place_ids, dest_place_id, api_key, cur_time, cur_zone):
 def get_time_InMintues(stored_time):
     get_time = stored_time.split(" ")[4].split(":")
     min_stored = int(get_time[0]) * 60 + int(get_time[1])
-
     return min_stored
+
 
 def get_time_InHour(stored_time):
     get_time = stored_time.split(" ")[4].split(":")
     hrs_stored = int(get_time[0])
     return hrs_stored
-
 
 def Add_Analytics_data(place_ids, api_key, collection_Obj, cur_zone):
     Analytics_collection = collection_Obj
