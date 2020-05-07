@@ -30,6 +30,7 @@ def perform_ordering_restaurant(result, occupancy_map):
     final_results = sorted(final_results, key=lambda X: [X["cur_occupancy"], -X["rating"]])
     return final_results
 
+
 def perform_ordering_grocery(result, occupancy_map):
     final_results = []
     for res in result:
@@ -93,6 +94,24 @@ def find_restaurants(lat, long, radius, placeid):
     my_json = {'results': ordered_results}
 
     if placeid in result_place_id:
+        open_hour_url = "https://maps.googleapis.com/maps/api/place/details/json?place_id={}&fields=name," \
+                        "opening_hours&key={}".format(placeid, GOOGLE_API_KEY)
+        day = dt[:3]
+        days = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
+        response = requests.get(open_hour_url)
+        jsn = response.json()
+        res = []
+        if "opening_hours" in jsn["result"]:
+            for period in jsn["result"]["opening_hours"]["periods"]:
+                if period["open"]["day"] == days[day]:
+                    res.append(int(period["open"]["time"][:2]))
+                    if period["open"]["day"] == period["close"]["day"]:
+                        res.append(int(period["close"]["time"][:2]))
+                    else:
+                        res.append(24)
+                    result_place_id[placeid]["open_close_duration"] = res
+                    break
+
         my_json["placeId"] = result_place_id[placeid]
 
     return json.dumps(my_json), 200
@@ -147,6 +166,24 @@ def find_store(lat, long, radius, placeid):
 
     my_json = {'results': ordered_results}
     if placeid in result_place_id:
+        open_hour_url = "https://maps.googleapis.com/maps/api/place/details/json?place_id={}&fields=name," \
+                        "opening_hours&key={}".format(placeid, GOOGLE_API_KEY)
+        day = dt[:3]
+        days = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
+        response = requests.get(open_hour_url)
+        jsn = response.json()
+        res = []
+        if "opening_hours" in jsn["result"]:
+            for period in jsn["result"]["opening_hours"]["periods"]:
+                if period["open"]["day"] == days[day]:
+                    res.append(int(period["open"]["time"][:2]))
+                    if period["open"]["day"] == period["close"]["day"]:
+                        res.append(int(period["close"]["time"][:2]))
+                    else:
+                        res.append(24)
+                    result_place_id[placeid]["open_close_duration"] = res
+                    break
+
         my_json["placeId"] = result_place_id[placeid]
 
     # to_send.append(my_json)
