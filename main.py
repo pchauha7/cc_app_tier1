@@ -6,7 +6,6 @@ import pytz
 from datetime import datetime
 
 from db import get_current_crowd
-import os
 
 app = Flask(__name__)  # create an app instance
 
@@ -29,6 +28,19 @@ def perform_ordering_restaurant(result, occupancy_map):
                 final_results[-1]["place_safety"] = "Hard to Maintain Social distancing"
 
     final_results = sorted(final_results, key=lambda X: [X["cur_occupancy"], -X["rating"]])
+    open=[]
+    close = []
+    for res in final_results:
+        if "opening_hours" in res:
+            if not res["opening_hours"]["open_now"]:
+                close.append(res)
+            else:
+                open.append(res)
+        else:
+            open.append(res)
+
+    final_results = open + close
+
     return final_results
 
 
@@ -48,15 +60,30 @@ def perform_ordering_grocery(result, occupancy_map):
                 final_results[-1]["place_safety"] = "Hard to Maintain Social distancing"
 
     final_results = sorted(final_results, key=lambda X: [X["cur_occupancy"], -X["rating"]])
+
+    open = []
+    close = []
+    for res in final_results:
+        if "opening_hours" in res:
+            if not res["opening_hours"]["open_now"]:
+                close.append(res)
+            else:
+                open.append(res)
+        else:
+            open.append(res)
+
+    final_results = open + close
+
     return final_results
 
 
 def find_restaurants(lat, long, radius, placeid):
     subPart = "{},{}&radius={}&type=restaurant&key={}".format(lat, long, radius, GOOGLE_API_KEY)
     url = base_url + subPart
-    # print(url)
+    #print(url)
     response = requests.get(url)
     jsn = response.json()
+    #print(response)
     result = []
     st = set()
     for place in jsn["results"]:
@@ -67,10 +94,10 @@ def find_restaurants(lat, long, radius, placeid):
     time_zone = tf.timezone_at(lng=long, lat=lat)
     tz = pytz.timezone(time_zone)
     dt = datetime.now(tz).ctime()
-    print(dt)
+    #print(dt)
     occupancy_map = get_current_crowd(list(st), placeid, GOOGLE_API_KEY, dt, time_zone)
 
-    print(occupancy_map)
+    #print(occupancy_map)
 
     result_place_id = {}
     if placeid in occupancy_map:
